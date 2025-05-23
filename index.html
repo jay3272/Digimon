@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數碼怪獸對打機</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .digimon-device {
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(145deg, #8B7D6B, #6B5B4A);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 
+                inset 3px 3px 10px rgba(0,0,0,0.3),
+                inset -3px -3px 10px rgba(255,255,255,0.1),
+                0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .screen-frame {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 
+                inset 5px 5px 15px rgba(0,0,0,0.5),
+                inset -2px -2px 8px rgba(255,255,255,0.1);
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #9CB68C;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            image-rendering: pixelated;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .pixel-grid {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+            background-size: 8px 8px;
+        }
+
+        .digimon {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            transition: all 0.3s ease;
+            image-rendering: pixelated;
+        }
+
+        .player-digimon {
+            left: 50px;
+            bottom: 50px;
+        }
+
+        .enemy-digimon {
+            right: 50px;
+            bottom: 50px;
+        }
+
+        .poop {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #8B4513;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #2c3e50;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .control-row {
+            display: contents;
+        }
+
+        .btn {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 
+                3px 3px 8px rgba(0,0,0,0.3),
+                -1px -1px 4px rgba(255,255,255,0.2);
+            background: linear-gradient(145deg, #d4d4d4, #b8b8b8);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 
+                1px 1px 4px rgba(0,0,0,0.4),
+                inset 2px 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: linear-gradient(145deg, #e0e0e0, #c4c4c4);
+        }
+
+        .battle-btn {
+            background: linear-gradient(145deg, #ff6b6b, #e55656);
+        }
+
+        .battle-btn:hover {
+            background: linear-gradient(145deg, #ff7878, #f06262);
+        }
+
+        .feed-btn {
+            background: linear-gradient(145deg, #4ecdc4, #45b7b8);
+        }
+
+        .feed-btn:hover {
+            background: linear-gradient(145deg, #5dd9d1, #51c4c4);
+        }
+
+        .clean-btn {
+            background: linear-gradient(145deg, #95e1d3, #74c7b8);
+        }
+
+        .clean-btn:hover {
+            background: linear-gradient(145deg, #a2e8db, #81d1c1);
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            height: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .health-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            z-index: 10;
+        }
+
+        .battle-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .pixel-egg {
+            width: 48px;
+            height: 64px;
+            position: relative;
+            image-rendering: pixelated;
+        }
+
+        .egg-row {
+            height: 8px;
+            position: relative;
+            display: flex;
+        }
+
+        .egg-row::before {
+            content: '';
+            display: block;
+            height: 8px;
+            background: #2F4F2F;
+        }
+
+        /* 蛋的形狀 - 每一行的寬度 */
+        .pixel-egg .r1::before { width: 16px; margin: 0 16px; }
+        .pixel-egg .r2::before { width: 24px; margin: 0 12px; }
+        .pixel-egg .r3::before { width: 32px; margin: 0 8px; }
+        .pixel-egg .r4::before { width: 40px; margin: 0 4px; }
+        .pixel-egg .r5::before { width: 40px; margin: 0 4px; }
+        .pixel-egg .r6::before { width: 32px; margin: 0 8px; }
+        .pixel-egg .r7::before { width: 24px; margin: 0 12px; }
+        .pixel-egg .r8::before { width: 16px; margin: 0 16px; }
+
+        /* 敵人蛋的顏色 */
+        .pixel-egg.enemy .egg-row::before {
+            background: #8B0000;
+        }
+
+        /* 蛋上的花紋 */
+        .pixel-egg .r2::after,
+        .pixel-egg .r4::after,
+        .pixel-egg .r6::after {
+            content: '';
+            position: absolute;
+            height: 8px;
+            width: 8px;
+            background: #228B22;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .pixel-egg.enemy .r2::after,
+        .pixel-egg.enemy .r4::after,
+        .pixel-egg.enemy .r6::after {
+            background: #DC143C;
+        }
+
+        /* 滾球獸 - 幼兒期 */
+        .koromon {
+            width: 48px;
+            height: 48px;
+        }
+        .koromon .body { background: #FFB6C1; width: 32px; height: 24px; margin: 8px; border-radius: 50%; }
+        .koromon .eye1 { background: #000; width: 4px; height: 4px; position: absolute; top: 14px; left: 18px; }
+        .koromon .eye2 { background: #000; width: 4px; height: 4px; position: absolute; top: 14px; left: 26px; }
+        .koromon .mouth { background: #000; width: 8px; height: 2px; position: absolute; top: 22px; left: 20px; border-radius: 2px; }
+
+        /* 亞古獸 - 成長期 */
+        .agumon {
+            width: 48px;
+            height: 56px;
+        }
+        .agumon .head { background: #FFA500; width: 24px; height: 20px; margin: 4px 12px; border-radius: 50%; }
+        .agumon .body { background: #FFA500; width: 20px; height: 24px; margin: 0 14px; }
+        .agumon .arm1, .agumon .arm2 { background: #FFA500; width: 8px; height: 12px; position: absolute; top: 28px; }
+        .agumon .arm1 { left: 8px; } .agumon .arm2 { right: 8px; }
+        .agumon .leg1, .agumon .leg2 { background: #FFA500; width: 8px; height: 8px; position: absolute; bottom: 4px; }
+        .agumon .leg1 { left: 12px; } .agumon .leg2 { right: 12px; }
+
+        /* 暴龍獸 - 成熟期 */
+        .greymon {
+            width: 56px;
+            height: 64px;
+        }
+        .greymon .head { background: #FF6347; width: 32px; height: 24px; margin: 4px 12px; }
+        .greymon .horn1, .greymon .horn2 { background: #FFFF00; width: 4px; height: 8px; position: absolute; top: 2px; }
+        .greymon .horn1 { left: 16px; } .greymon .horn2 { right: 16px; }
+        .greymon .body { background: #FF6347; width: 28px; height: 28px; margin: 0 14px; }
+        .greymon .stripe { background: #8B0000; width: 28px; height: 4px; margin: 0 14px; }
+
+        /* 機械暴龍獸 - 完全體 */
+        .metalgreymon {
+            width: 60px;
+            height: 68px;
+        }
+        .metalgreymon .head { background: #808080; width: 36px; height: 24px; margin: 4px 12px; }
+        .metalgreymon .missile { background: #FF0000; width: 8px; height: 16px; position: absolute; top: 0; left: 26px; }
+        .metalgreymon .body { background: #FF6347; width: 32px; height: 32px; margin: 0 14px; }
+        .metalgreymon .metal { background: #C0C0C0; width: 16px; height: 32px; position: absolute; top: 28px; right: 8px; }
+
+        /* 戰鬥暴龍獸 - 究極體 */
+        .wargreymon {
+            width: 64px;
+            height: 72px;
+        }
+        .wargreymon .head { background: #FFD700; width: 40px; height: 28px; margin: 4px 12px; }
+        .wargreymon .helmet { background: #FF4500; width: 32px; height: 8px; margin: 0 16px; }
+        .wargreymon .body { background: #FFD700; width: 36px; height: 32px; margin: 0 14px; }
+        .wargreymon .armor { background: #B22222; width: 36px; height: 4px; margin: 0 14px; }
+        .wargreymon .shield { background: #C0C0C0; width: 12px; height: 16px; position: absolute; top: 32px; left: 8px; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .feeding {
+            animation: bounce 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="digimon-device">
+        <div class="screen-frame">
+            <div class="screen">
+                <div class="pixel-grid"></div>
+                
+                <div class="stats-display">
+                    <div><span id="digimonName">數碼蛋</span> Lv.<span id="level">1</span></div>
+                    <div>HP: <span id="playerHp">50</span>/<span id="maxHp">50</span></div>
+                    <div>經驗: <span id="experience">0</span></div>
+                    <div>飢餓: <span id="hunger">50</span>/100</div>
+                    <div>清潔: <span id="cleanliness">75</span>/100</div>
+                </div>
+
+                <div class="digimon player-digimon" id="playerDigimon">
+                    <div id="digimonSprite">
+                        <!-- 數碼蛋 (預設) -->
+                        <div class="pixel-egg">
+                            <div class="egg-row r1"></div>
+                            <div class="egg-row r2"></div>
+                            <div class="egg-row r3"></div>
+                            <div class="egg-row r4"></div>
+                            <div class="egg-row r5"></div>
+                            <div class="egg-row r6"></div>
+                            <div class="egg-row r7"></div>
+                            <div class="egg-row r8"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="digimon enemy-digimon" id="enemyDigimon" style="display: none;">
+                    <div class="pixel-egg enemy">
+                        <div class="egg-row r1"></div>
+                        <div class="egg-row r2"></div>
+                        <div class="egg-row r3"></div>
+                        <div class="egg-row r4"></div>
+                        <div class="egg-row r5"></div>
+                        <div class="egg-row r6"></div>
+                        <div class="egg-row r7"></div>
+                        <div class="egg-row r8"></div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <div class="health-bar" id="healthBar" style="width: 100%;"></div>
+                </div>
+
+                <div class="message" id="gameMessage"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <!-- 上排按鈕 -->
+            <button class="btn feed-btn" onclick="feedDigimon()">🍖</button>
+            <button class="btn battle-btn" onclick="startBattle()">⚔️</button>
+            <button class="btn" onclick="trainDigimon()">💪</button>
+            <button class="btn" onclick="sleepDigimon()">😴</button>
+            
+            <!-- 下排按鈕 -->
+            <button class="btn clean-btn" onclick="cleanPoop()">💩</button>
+            <button class="btn" onclick="playGame()">🎮</button>
+            <button class="btn" onclick="checkStats()">📊</button>
+            <button class="btn" onclick="resetGame()">🔄</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            playerHp: 100,
+            enemyHp: 100,
+            hunger: 50,
+            cleanliness: 75,
+            happiness: 80,
+            inBattle: false,
+            poopCount: 0,
+            poops: [],
+            evolution: {
+                stage: 0, // 0=蛋, 1=幼兒期, 2=成長期, 3=成熟期, 4=完全體, 5=究極體
+                experience: 0,
+                name: '數碼蛋',
+                level: 1,
+                battleWins: 0,
+                trainingCount: 0
+            }
+        };
+
+        const evolutionData = {
+            0: { name: '數碼蛋', minExp: 0, hp: 50 },
+            1: { name: '滾球獸', minExp: 50, hp: 80 },
+            2: { name: '亞古獸', minExp: 150, hp: 120 },
+            3: { name: '暴龍獸', minExp: 300, hp: 180 },
+            4: { name: '機械暴龍獸', minExp: 500, hp: 250 },
+            5: { name: '戰鬥暴龍獸', minExp: 800, hp: 350 }
+        };
+
+        let gameLoop;
+        
+        function updateDisplay() {
+            document.getElementById('playerHp').textContent = gameState.playerHp;
+            document.getElementById('maxHp').textContent = evolutionData[gameState.evolution.stage].hp;
+            document.getElementById('hunger').textContent = gameState.hunger;
+            document.getElementById('cleanliness').textContent = gameState.cleanliness;
+            document.getElementById('experience').textContent = gameState.evolution.experience;
+            document.getElementById('level').textContent = gameState.evolution.level;
+            document.getElementById('digimonName').textContent = gameState.evolution.name;
+            
+            const healthPercent = (gameState.playerHp / evolutionData[gameState.evolution.stage].hp) * 100;
+            document.getElementById('healthBar').style.width = healthPercent + '%';
+            
+            // 檢查是否可以進化
+            checkEvolution();
+        }
+
+        function checkEvolution() {
+            const currentStage = gameState.evolution.stage;
+            const nextStage = currentStage + 1;
+            
+            if (nextStage < 6 && gameState.evolution.experience >= evolutionData[nextStage].minExp) {
+                evolveDigimon(nextStage);
+            }
+        }
+
+        function evolveDigimon(newStage) {
+            const oldName = gameState.evolution.name;
+            gameState.evolution.stage = newStage;
+            gameState.evolution.name = evolutionData[newStage].name;
+            gameState.evolution.level++;
+            
+            // 恢復滿血
+            gameState.playerHp = evolutionData[newStage].hp;
+            
+            // 更新數碼獸外觀
+            updateDigimonSprite(newStage);
+            
+            showMessage(`恭喜！${oldName} 進化成了 ${gameState.evolution.name}！`, 4000);
+            updateDisplay();
+        }
+
+        function updateDigimonSprite(stage) {
+            const spriteContainer = document.getElementById('digimonSprite');
+            
+            const sprites = {
+                0: `<div class="pixel-egg">
+                        <div class="egg-row r1"></div>
+                        <div class="egg-row r2"></div>
+                        <div class="egg-row r3"></div>
+                        <div class="egg-row r4"></div>
+                        <div class="egg-row r5"></div>
+                        <div class="egg-row r6"></div>
+                        <div class="egg-row r7"></div>
+                        <div class="egg-row r8"></div>
+                    </div>`,
+                1: `<div class="koromon">
+                        <div class="body"></div>
+                        <div class="eye1"></div>
+                        <div class="eye2"></div>
+                        <div class="mouth"></div>
+                    </div>`,
+                2: `<div class="agumon">
+                        <div class="head"></div>
+                        <div class="body"></div>
+                        <div class="arm1"></div>
+                        <div class="arm2"></div>
+                        <div class="leg1"></div>
+                        <div class="leg2"></div>
+                    </div>`,
+                3: `<div class="greymon">
+                        <div class="head"></div>
+                        <div class="horn1"></div>
+                        <div class="horn2"></div>
+                        <div class="body"></div>
+                        <div class="stripe"></div>
+                    </div>`,
+                4: `<div class="metalgreymon">
+                        <div class="head"></div>
+                        <div class="missile"></div>
+                        <div class="body"></div>
+                        <div class="metal"></div>
+                    </div>`,
+                5: `<div class="wargreymon">
+                        <div class="head"></div>
+                        <div class="helmet"></div>
+                        <div class="body"></div>
+                        <div class="armor"></div>
+                        <div class="shield"></div>
+                    </div>`
+            };
+            
+            spriteContainer.innerHTML = sprites[stage];
+        }
+
+        function showMessage(text, duration = 2000) {
+            const messageEl = document.getElementById('gameMessage');
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, duration);
+        }
+
+        function feedDigimon() {
+            if (gameState.hunger < 100) {
+                gameState.hunger = Math.min(100, gameState.hunger + 30);
+                gameState.playerHp = Math.min(evolutionData[gameState.evolution.stage].hp, gameState.playerHp + 10);
+                gameState.evolution.experience += 5;
+                
+                const digimon = document.getElementById('playerDigimon');
+                digimon.classList.add('feeding');
+                setTimeout(() => digimon.classList.remove('feeding'), 500);
+                
+                showMessage('數碼獸吃飽了！ +30 飽食度 +5 經驗');
+                updateDisplay();
+            } else {
+                showMessage('數碼獸已經很飽了！');
+            }
+        }
+
+        function startBattle() {
+            if (gameState.inBattle) {
+                showMessage('已經在戰鬥中！');
+                return;
+            }
+            
+            if (gameState.hunger < 30) {
+                showMessage('數碼獸太餓了，無法戰鬥！');
+                return;
+            }
+            
+            gameState.inBattle = true;
+            gameState.enemyHp = 100;
+            
+            document.getElementById('enemyDigimon').style.display = 'block';
+            showMessage('野生數碼獸出現了！');
+            
+            setTimeout(() => {
+                battle();
+            }, 1500);
+        }
+
+        function battle() {
+            if (!gameState.inBattle) return;
+            
+            // 玩家攻擊力根據進化階段調整
+            const baseAttack = 15 + (gameState.evolution.stage * 10);
+            const playerDamage = Math.floor(Math.random() * 15) + baseAttack;
+            gameState.enemyHp = Math.max(0, gameState.enemyHp - playerDamage);
+            
+            const playerDigimon = document.getElementById('playerDigimon');
+            const enemyDigimon = document.getElementById('enemyDigimon');
+            
+            playerDigimon.classList.add('battle-animation');
+            setTimeout(() => playerDigimon.classList.remove('battle-animation'), 500);
+            
+            showMessage(`${gameState.evolution.name} 造成 ${playerDamage} 點傷害！`);
+            
+            if (gameState.enemyHp <= 0) {
+                setTimeout(() => {
+                    const expGain = 20 + (gameState.evolution.stage * 5);
+                    gameState.evolution.experience += expGain;
+                    gameState.evolution.battleWins++;
+                    
+                    showMessage(`勝利！獲得 ${expGain} 經驗值！`);
+                    gameState.inBattle = false;
+                    document.getElementById('enemyDigimon').style.display = 'none';
+                    gameState.happiness = Math.min(100, gameState.happiness + 20);
+                    updateDisplay();
+                }, 1000);
+                return;
+            }
+            
+            // 敵人反擊
+            setTimeout(() => {
+                const enemyDamage = Math.floor(Math.random() * 20) + 10;
+                gameState.playerHp = Math.max(0, gameState.playerHp - enemyDamage);
+                
+                enemyDigimon.classList.add('battle-animation');
+                setTimeout(() => enemyDigimon.classList.remove('battle-animation'), 500);
+                
+                showMessage(`受到 ${enemyDamage} 點傷害！`);
+                updateDisplay();
+                
+                if (gameState.playerHp <= 0) {
+                    setTimeout(() => {
+                        showMessage('戰敗了...數碼獸需要休息');
+                        gameState.inBattle = false;
+                        document.getElementById('enemyDigimon').style.display = 'none';
+                        gameState.playerHp = Math.floor(evolutionData[gameState.evolution.stage].hp * 0.2);
+                        updateDisplay();
+                    }, 1000);
+                } else {
+                    setTimeout(() => battle(), 2000);
+                }
+            }, 1500);
+        }
+
+        function trainDigimon() {
+            if (gameState.hunger < 20) {
+                showMessage('數碼獸太餓了，無法訓練！');
+                return;
+            }
+            
+            gameState.hunger = Math.max(0, gameState.hunger - 20);
+            gameState.playerHp = Math.min(evolutionData[gameState.evolution.stage].hp, gameState.playerHp + 5);
+            gameState.happiness = Math.min(100, gameState.happiness + 15);
+            gameState.evolution.experience += 10;
+            gameState.evolution.trainingCount++;
+            
+            showMessage(`${gameState.evolution.name} 訓練完成！體力提升！ +10 經驗`);
+            updateDisplay();
+        }
+
+        function sleepDigimon() {
+            gameState.playerHp = Math.min(evolutionData[gameState.evolution.stage].hp, gameState.playerHp + 30);
+            gameState.happiness = Math.min(100, gameState.happiness + 10);
+            gameState.evolution.experience += 3;
+            
+            showMessage(`${gameState.evolution.name} 睡了一覺，恢復體力！`);
+            updateDisplay();
+        }
+
+        function generatePoop() {
+            if (gameState.poops.length < 5 && Math.random() < 0.3) {
+                const poop = document.createElement('div');
+                poop.className = 'poop';
+                poop.style.left = Math.random() * 300 + 'px';
+                poop.style.top = Math.random() * 150 + 100 + 'px';
+                
+                document.querySelector('.screen').appendChild(poop);
+                gameState.poops.push(poop);
+                
+                gameState.cleanliness = Math.max(0, gameState.cleanliness - 15);
+                updateDisplay();
+            }
+        }
+
+        function cleanPoop() {
+            gameState.poops.forEach(poop => {
+                poop.remove();
+            });
+            gameState.poops = [];
+            gameState.cleanliness = 100;
+            gameState.happiness = Math.min(100, gameState.happiness + 10);
+            
+            showMessage('清理完成！數碼獸很開心！');
+            updateDisplay();
+        }
+
+        function playGame() {
+            if (gameState.hunger < 10) {
+                showMessage('數碼獸太餓了，沒心情玩遊戲！');
+                return;
+            }
+            
+            gameState.hunger = Math.max(0, gameState.hunger - 10);
+            gameState.happiness = Math.min(100, gameState.happiness + 25);
+            
+            showMessage('和數碼獸玩得很開心！');
+            updateDisplay();
+        }
+
+        function checkStats() {
+            showMessage(`飢餓:${gameState.hunger} 清潔:${gameState.cleanliness} 快樂:${gameState.happiness}`, 3000);
+        }
+
+        function resetGame() {
+            gameState = {
+                playerHp: 100,
+                enemyHp: 100,
+                hunger: 50,
+                cleanliness: 75,
+                happiness: 80,
+                inBattle: false,
+                poopCount: 0,
+                poops: []
+            };
+            
+            document.getElementById('enemyDigimon').style.display = 'none';
+            cleanPoop();
+            updateDisplay();
+            showMessage('遊戲重置！');
+        }
+
+        // 遊戲主循環
+        function startGameLoop() {
+            gameLoop = setInterval(() => {
+                // 隨機減少數值
+                if (Math.random() < 0.3) {
+                    gameState.hunger = Math.max(0, gameState.hunger - 1);
+                }
+                
+                if (Math.random() < 0.2) {
+                    gameState.happiness = Math.max(0, gameState.happiness - 1);
+                }
+                
+                // 產生便便
+                if (gameState.cleanliness > 0) {
+                    generatePoop();
+                }
+                
+                // 如果數值太低，影響健康
+                if (gameState.hunger < 20 || gameState.cleanliness < 30) {
+                    gameState.playerHp = Math.max(1, gameState.playerHp - 1);
+                }
+                
+                updateDisplay();
+            }, 3000);
+        }
+
+        // 初始化遊戲
+        updateDisplay();
+        startGameLoop();
+        showMessage('歡迎來到數碼獸世界！', 3000);
+    </script>
+</body>
+</html>
